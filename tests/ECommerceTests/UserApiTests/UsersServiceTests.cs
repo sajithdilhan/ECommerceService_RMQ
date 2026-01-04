@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MassTransit;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Models;
 using UserApi.Data;
@@ -12,11 +13,13 @@ public class UsersServiceTests
     private readonly Mock<IUserRepository> _userRepository;
     private readonly Mock<ILogger<UsersService>> _logger;
     private readonly CancellationToken _cts = new CancellationToken();
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public UsersServiceTests()
     {
         _userRepository = new Mock<IUserRepository>();
         _logger = new Mock<ILogger<UsersService>>();
+        _publishEndpoint = new Mock<IPublishEndpoint>().Object;
     }
 
     [Fact]
@@ -33,7 +36,7 @@ public class UsersServiceTests
             }
             );
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
         // Act
         var result = await usersService.GetUserByIdAsync(userId, _cts);
@@ -49,7 +52,7 @@ public class UsersServiceTests
         // Arrange
         Guid userId = Guid.NewGuid();
         _userRepository.Setup(repo => repo.GetUserByIdAsync(userId, _cts)).ReturnsAsync((User?)null);
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
         // Act
         var result = await usersService.GetUserByIdAsync(userId, _cts);
@@ -67,7 +70,7 @@ public class UsersServiceTests
         Guid userId = Guid.NewGuid();
         _userRepository.Setup(repo => repo.GetUserByIdAsync(userId, _cts)).ThrowsAsync(new Exception("Database error"));
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
 
         // Act
@@ -103,7 +106,7 @@ public class UsersServiceTests
         _userRepository.Setup(repo => repo.CreateUserAsync(It.IsAny<User>(), _cts))
             .ReturnsAsync(createdUser);
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
         // Act
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);
@@ -133,7 +136,7 @@ public class UsersServiceTests
                 Email = newUserRequest.Email
             });
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
         // Act
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);
@@ -160,7 +163,7 @@ public class UsersServiceTests
         _userRepository.Setup(repo => repo.CreateUserAsync(It.IsAny<User>(), _cts))
             .ReturnsAsync((User?)null);
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
         // Act 
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);
@@ -184,7 +187,7 @@ public class UsersServiceTests
         _userRepository.Setup(repo => repo.GetUserByEmailAsync(newUserRequest.Email, _cts))
             .ThrowsAsync(new Exception("Database connection failed"));
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object, _publishEndpoint);
 
         // Act
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);

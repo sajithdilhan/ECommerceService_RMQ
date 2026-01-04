@@ -73,7 +73,7 @@ public class UsersController(IUsersService usersService, ILogger<UsersController
 
         if (!result.IsSuccess)
         {
-            Problem(detail: result.Error!.Message, statusCode: result.Error.Code);
+            return Problem(detail: result.Error!.Message, statusCode: result.Error.Code);
         }
 
         await cache.SetStringAsync(

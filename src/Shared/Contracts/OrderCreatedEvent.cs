@@ -1,13 +1,13 @@
 ﻿namespace Shared.Contracts;
 
-public class OrderCreatedEvent
+public record OrderCreatedEvent
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    public Guid Id { get; init; }
+    public Guid UserId { get; init; }
 
-    public string Product { get; set; } = string.Empty;
+    public string Product { get; init; } = string.Empty;
 
-    public int Quantity { get; set; }
+    public int Quantity { get; init; }
 
-    public decimal Price { get; set; }
+    public decimal Price { get; init; }
 }

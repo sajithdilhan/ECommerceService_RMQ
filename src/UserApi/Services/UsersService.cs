@@ -1,4 +1,5 @@
-﻿using Shared.Contracts;
+﻿using MassTransit;
+using Shared.Contracts;
 using Shared.Models;
 using System.Net;
 using UserApi.Data;
@@ -6,7 +7,7 @@ using UserApi.Dtos;
 
 namespace UserApi.Services;
 
-public class UsersService(IUserRepository userRepository, ILogger<UsersService> logger) : IUsersService
+public class UsersService(IUserRepository userRepository, ILogger<UsersService> logger, IPublishEndpoint publishEndpoint) : IUsersService
 {
     public async Task<Result<UserResponse>> CreateUserAsync(UserCreationRequest newUser, CancellationToken cts)
     {
@@ -29,7 +30,13 @@ public class UsersService(IUserRepository userRepository, ILogger<UsersService> 
                     $"Repository failed to create user for: {newUser.Email}"));
             }
 
-            // Produce user created event to message bus (omitted for brevity)
+            // Produce user created event to message bus
+            await publishEndpoint.Publish<UserCreatedEvent>(new UserCreatedEvent
+            {
+                UserId = createdUser.Id,
+                Name = createdUser.Name,
+                Email = createdUser.Email
+            }, cts);
 
             return Result<UserResponse>.Success(UserResponse.MapUserToResponseDto(createdUser));
         }

@@ -48,15 +48,16 @@ public class ExceptionMiddleware
 
         var message = statusCode switch
         {
-            HttpStatusCode.BadRequest => "Invalid request.",
+            HttpStatusCode.BadRequest => "Bad request.",
             HttpStatusCode.NotFound => "Resource not found.",
-            HttpStatusCode.Conflict => "Resource conflict occurred.",
+            HttpStatusCode.Conflict => "Resource conflict.",
+            HttpStatusCode.Unauthorized => "Unauthorized access.",
             _ => "An unexpected error occurred. Please try again later."
         };
 
         var problem = new ApiProblemDetails
         {
-            Title = "An unexpected error occurred.",
+            Title = "Unexpected error in server",
             Status = (int)statusCode,
             Detail = message,
             Instance = context.Request.Path
