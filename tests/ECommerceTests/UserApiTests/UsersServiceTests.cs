@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
-using Shared.Contracts;
-using Shared.Exceptions;
 using Shared.Models;
 using UserApi.Data;
 using UserApi.Dtos;
@@ -12,14 +10,12 @@ namespace ECommerceTests.UserApiTests;
 public class UsersServiceTests
 {
     private readonly Mock<IUserRepository> _userRepository;
-    private readonly Mock<IKafkaProducerWrapper> _kfkaProducer;
     private readonly Mock<ILogger<UsersService>> _logger;
     private readonly CancellationToken _cts = new CancellationToken();
 
     public UsersServiceTests()
     {
         _userRepository = new Mock<IUserRepository>();
-        _kfkaProducer = new Mock<IKafkaProducerWrapper>();
         _logger = new Mock<ILogger<UsersService>>();
     }
 
@@ -37,7 +33,7 @@ public class UsersServiceTests
             }
             );
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
         // Act
         var result = await usersService.GetUserByIdAsync(userId, _cts);
@@ -53,7 +49,7 @@ public class UsersServiceTests
         // Arrange
         Guid userId = Guid.NewGuid();
         _userRepository.Setup(repo => repo.GetUserByIdAsync(userId, _cts)).ReturnsAsync((User?)null);
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
         // Act
         var result = await usersService.GetUserByIdAsync(userId, _cts);
@@ -71,7 +67,7 @@ public class UsersServiceTests
         Guid userId = Guid.NewGuid();
         _userRepository.Setup(repo => repo.GetUserByIdAsync(userId, _cts)).ThrowsAsync(new Exception("Database error"));
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
 
         // Act
@@ -107,7 +103,7 @@ public class UsersServiceTests
         _userRepository.Setup(repo => repo.CreateUserAsync(It.IsAny<User>(), _cts))
             .ReturnsAsync(createdUser);
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
         // Act
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);
@@ -137,7 +133,7 @@ public class UsersServiceTests
                 Email = newUserRequest.Email
             });
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
         // Act
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);
@@ -164,7 +160,7 @@ public class UsersServiceTests
         _userRepository.Setup(repo => repo.CreateUserAsync(It.IsAny<User>(), _cts))
             .ReturnsAsync((User?)null);
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
         // Act 
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);
@@ -188,7 +184,7 @@ public class UsersServiceTests
         _userRepository.Setup(repo => repo.GetUserByEmailAsync(newUserRequest.Email, _cts))
             .ThrowsAsync(new Exception("Database connection failed"));
 
-        var usersService = new UsersService(_userRepository.Object, _logger.Object, _kfkaProducer.Object);
+        var usersService = new UsersService(_userRepository.Object, _logger.Object);
 
         // Act
         var result = await usersService.CreateUserAsync(newUserRequest, _cts);

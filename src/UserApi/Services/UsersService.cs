@@ -6,7 +6,7 @@ using UserApi.Dtos;
 
 namespace UserApi.Services;
 
-public class UsersService(IUserRepository userRepository, ILogger<UsersService> logger, IKafkaProducerWrapper producer) : IUsersService
+public class UsersService(IUserRepository userRepository, ILogger<UsersService> logger) : IUsersService
 {
     public async Task<Result<UserResponse>> CreateUserAsync(UserCreationRequest newUser, CancellationToken cts)
     {
@@ -29,8 +29,7 @@ public class UsersService(IUserRepository userRepository, ILogger<UsersService> 
                     $"Repository failed to create user for: {newUser.Email}"));
             }
 
-            await producer.ProduceAsync(createdUser.Id,
-                new UserCreatedEvent { UserId = createdUser.Id, Email = createdUser.Email, Name = createdUser.Name }, cts);
+            // Produce user created event to message bus (omitted for brevity)
 
             return Result<UserResponse>.Success(UserResponse.MapUserToResponseDto(createdUser));
         }

@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OrderApi.Data;
-using OrderApi.Events;
 using OrderApi.Services;
 using Shared.Authentication;
-using Shared.Contracts;
 using Shared.Middlewares;
 using static Shared.Common.Constants;
 
@@ -59,10 +57,8 @@ static void AddDependencies(WebApplicationBuilder builder)
     var databaseName = builder.Configuration.GetConnectionString("OrderDatabase") ?? "OrderDatabase";
     builder.Services.AddDbContext<OrderDbContext>(options =>
         options.UseInMemoryDatabase(databaseName));
-    builder.Services.AddSingleton<IKafkaProducerWrapper, KafkaProducerWrapper>();
     builder.Services.AddScoped<IOrderRepository, OrderRepository>();
     builder.Services.AddScoped<IOrdersService, OrdersService>();
-    builder.Services.AddHostedService<UserConsumerService>();
     builder.Services.AddHealthChecks();
     builder.Services.AddOptions<AuthenticationOptions>().Bind(builder.Configuration.GetSection(AuthenticationSectionName));
     builder.Services.AddTransient<IApiKeyValidation, ApiKeyValidation>();

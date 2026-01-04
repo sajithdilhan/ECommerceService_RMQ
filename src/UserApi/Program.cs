@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shared.Authentication;
-using Shared.Contracts;
 using Shared.Middlewares;
 using UserApi.Data;
-using UserApi.Events;
 using UserApi.Services;
 using static Shared.Common.Constants;
 
@@ -62,8 +60,6 @@ static void AddDependencies(WebApplicationBuilder builder)
         options.UseInMemoryDatabase(databaseName));
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IUsersService, UsersService>();
-    builder.Services.AddSingleton<IKafkaProducerWrapper, KafkaProducerWrapper>();
-    builder.Services.AddHostedService<OrderConsumerService>();
     builder.Services.AddOptions<AuthenticationOptions>().Bind(builder.Configuration.GetSection(AuthenticationSectionName));
     builder.Services.AddTransient<IApiKeyValidation, ApiKeyValidation>();
     builder.Services.AddHttpContextAccessor();

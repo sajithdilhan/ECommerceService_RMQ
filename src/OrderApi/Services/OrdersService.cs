@@ -6,7 +6,7 @@ using System.Net;
 
 namespace OrderApi.Services;
 
-public class OrdersService(IOrderRepository orderRepository, ILogger<OrdersService> logger, IKafkaProducerWrapper producer) : IOrdersService
+public class OrdersService(IOrderRepository orderRepository, ILogger<OrdersService> logger) : IOrdersService
 {
     public async Task<Result<OrderResponse>> CreateOrderAsync(OrderCreationRequest newOrder, CancellationToken cts)
     {
@@ -28,15 +28,7 @@ public class OrdersService(IOrderRepository orderRepository, ILogger<OrdersServi
                 return Result<OrderResponse>.Failure(new Error((int)HttpStatusCode.InternalServerError, $"Order creation failed."));
             }
 
-            await producer.ProduceAsync(createdOrder.Id,
-                    new OrderCreatedEvent
-                    {
-                        Id = createdOrder.Id,
-                        UserId = createdOrder.UserId,
-                        Price = createdOrder.Price,
-                        Product = createdOrder.Product,
-                        Quantity = createdOrder.Quantity
-                    }, cts);
+            // Produce order created event to message bus (omitted for brevity)
 
             return Result<OrderResponse>.Success(OrderResponse.MapOrderToResponseDto(createdOrder));
         }
