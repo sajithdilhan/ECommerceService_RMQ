@@ -1,18 +1,20 @@
-using MassTransit;
+using Amazon;
+using Amazon.SecretsManager;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OrderApi.Data;
-using OrderApi.Events;
+using OrderApi.Extensions;
 using OrderApi.Services;
 using Shared.Authentication;
 using Shared.Middlewares;
-using Shared.Models;
 using static Shared.Common.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
+IAmazonSecretsManager secretsManager = new AmazonSecretsManagerClient(RegionEndpoint.APSoutheast1);
+
 AddDependencies(builder);
-AddMassTransit(builder);
+await builder.AddRabbitMqMassTransitAsync(secretsManager);
 
 var app = builder.Build();
 
@@ -72,34 +74,5 @@ static void AddDependencies(WebApplicationBuilder builder)
     {
         options.Configuration = builder.Configuration.GetConnectionString("Redis");
         options.InstanceName = "OrderApi_";
-    });
-}
-
-static void AddMassTransit(WebApplicationBuilder builder)
-{
-    var rabbitSettings = builder.Configuration.GetSection("RabbitMqSettings").Get<RabbitMqSettings>();
-
-    if (rabbitSettings == null || string.IsNullOrEmpty(rabbitSettings.Host) || string.IsNullOrEmpty(rabbitSettings.Username) || string.IsNullOrEmpty(rabbitSettings.Password))
-    {
-        throw new InvalidOperationException("RabbitMq settings are not properly configured.");
-    }
-
-    builder.Services.AddMassTransit(x =>
-    {
-        x.AddConsumer<UserCreatedConsumer>();
-
-        x.UsingRabbitMq((context, cfg) =>
-        {
-            cfg.Host(rabbitSettings.Host, rabbitSettings.VirtualHost, h =>
-            {
-                h.Username(rabbitSettings.Username);
-                h.Password(rabbitSettings.Password);
-            });
-
-            cfg.ReceiveEndpoint("order-service.user-created", e =>
-            {
-                e.ConfigureConsumer<UserCreatedConsumer>(context);
-            });
-        });
     });
 }

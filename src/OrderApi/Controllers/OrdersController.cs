@@ -59,9 +59,14 @@ public class OrdersController(IOrdersService ordersService, ILogger<OrdersContro
         }
 
         logger.LogInformation("Retrieving orders by user: {UserId}", userId);
-        var order = await ordersService.GetOrdersByUserAsync(userId, cts);
+        var result = await ordersService.GetOrdersByUserAsync(userId, cts);
 
-        return Ok(order);
+        if (!result.IsSuccess)
+        {
+            return Problem(detail: result.Error!.Message, statusCode: result.Error.Code);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpPost]

@@ -7,8 +7,8 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-    - "5672:5672"
-    - "15672:15672"
+      - "5672:5672"
+      - "15672:15672"
 
   user-api:
     build:
@@ -16,6 +16,11 @@ services:
       dockerfile: ./src/UserApi/Dockerfile
     ports:
       - "5001:8080"
+    volumes:
+      - ${USERPROFILE}/.aws:/home/app/.aws:ro
+    environment:
+      AWS_PROFILE: sajithdilhan
+      AWS_REGION: ap-southeast-1
 
   order-api:
     build:
@@ -23,3 +28,8 @@ services:
       dockerfile: ./src/OrderApi/Dockerfile
     ports:
       - "5002:8080"
+    volumes:
+      - ${USERPROFILE}/.aws:/home/app/.aws:ro
+    environment:
+      AWS_PROFILE: sajithdilhan
+      AWS_REGION: ap-southeast-1

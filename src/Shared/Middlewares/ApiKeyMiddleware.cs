@@ -7,8 +7,17 @@ namespace Shared.Middlewares;
 
 public class ApiKeyMiddleware(RequestDelegate next, IApiKeyValidation apiKeyValidation, ILogger<ApiKeyMiddleware> logger)
 {
+    private readonly HashSet<string> _excludedPaths = new() { "/health", "/ready" };
+
     public async Task InvokeAsync(HttpContext context)
     {
+        var pathValue = context.Request.Path.Value;
+        if (pathValue != null && _excludedPaths.Contains(pathValue.ToLowerInvariant()))
+        {
+            await next(context);
+            return;
+        }
+
         var userApiKey = context.Request.Headers[Common.Constants.ApiKeyHeaderName].FirstOrDefault();
         if (!apiKeyValidation.IsValidApiKey(userApiKey))
         {

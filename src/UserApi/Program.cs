@@ -1,17 +1,20 @@
-using MassTransit;
+using Amazon;
+using Amazon.SecretsManager;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Shared.Authentication;
 using Shared.Middlewares;
-using Shared.Models;
 using UserApi.Data;
+using UserApi.Extensions;
 using UserApi.Services;
 using static Shared.Common.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
+IAmazonSecretsManager secretsManager = new AmazonSecretsManagerClient(RegionEndpoint.APSoutheast1);
+
 AddDependencies(builder);
-AddMassTransit(builder);
+await builder.AddRabbitMqMassTransitAsync(secretsManager);
 
 var app = builder.Build();
 
@@ -73,26 +76,4 @@ static void AddDependencies(WebApplicationBuilder builder)
     });
     builder.Services.AddHealthChecks();
     builder.Services.AddControllers();
-}
-
-static void AddMassTransit(WebApplicationBuilder builder)
-{
-    var rabbitSettings = builder.Configuration.GetSection("RabbitMqSettings").Get<RabbitMqSettings>();
-
-    if (rabbitSettings == null || string.IsNullOrEmpty(rabbitSettings.Host) || string.IsNullOrEmpty(rabbitSettings.Username) || string.IsNullOrEmpty(rabbitSettings.Password))
-    {
-        throw new InvalidOperationException("RabbitMq settings are not properly configured.");
-    }
-
-    builder.Services.AddMassTransit(x =>
-    {
-        x.UsingRabbitMq((context, cfg) =>
-        {
-            cfg.Host(rabbitSettings.Host, rabbitSettings.VirtualHost, h =>
-            {
-                h.Username(rabbitSettings.Username);
-                h.Password(rabbitSettings.Password);
-            });
-        });
-    });
 }
